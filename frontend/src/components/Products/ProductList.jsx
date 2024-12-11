@@ -11,12 +11,21 @@ import {
   Td,
   VStack,
   Heading,
-  useToast
+  useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure
 } from '@chakra-ui/react';
 import api from '../../services/api';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -36,6 +45,36 @@ function ProductList() {
         duration: 3000
       });
     }
+  };
+
+  const handleEdit = (productId) => {
+    navigate(`/products/edit/${productId}`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/products/${selectedProductId}`);
+      toast({
+        title: 'Sukses',
+        description: 'Produk berhasil dihapus',
+        status: 'success',
+        duration: 3000
+      });
+      fetchProducts(); // Refresh list setelah hapus
+      onClose();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus produk',
+        status: 'error',
+        duration: 3000
+      });
+    }
+  };
+
+  const openDeleteDialog = (productId) => {
+    setSelectedProductId(productId);
+    onOpen();
   };
 
   return (
@@ -67,14 +106,14 @@ function ProductList() {
                     size="sm"
                     colorScheme="blue"
                     mr={2}
-                    onClick={() => navigate(`/products/${product._id}/edit`)}
+                    onClick={() => handleEdit(product._id)}
                   >
                     Edit
                   </Button>
                   <Button
                     size="sm"
                     colorScheme="red"
-                    onClick={() => handleDelete(product._id)}
+                    onClick={() => openDeleteDialog(product._id)}
                   >
                     Hapus
                   </Button>
@@ -84,6 +123,24 @@ function ProductList() {
           </Tbody>
         </Table>
       </VStack>
+
+      {/* Dialog Konfirmasi Hapus */}
+      <AlertDialog isOpen={isOpen} onClose={onClose}>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Hapus Produk</AlertDialogHeader>
+            <AlertDialogBody>
+              Apakah Anda yakin ingin menghapus produk ini?
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button onClick={onClose}>Batal</Button>
+              <Button colorScheme="red" ml={3} onClick={handleDelete}>
+                Hapus
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 }

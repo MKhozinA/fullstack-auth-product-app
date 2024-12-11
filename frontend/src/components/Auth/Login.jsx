@@ -10,19 +10,19 @@ import {
   Heading,
   useToast
 } from '@chakra-ui/react'
-import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
   const toast = useToast()
+  const { login } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const response = await api.post('/auth/login', { username, password })
-      localStorage.setItem('token', response.data.token)
+      await login(username, password)
       toast({
         title: 'Login berhasil',
         status: 'success',
@@ -32,7 +32,7 @@ function Login() {
     } catch (error) {
       toast({
         title: 'Login gagal',
-        description: error.response?.data?.message || 'Terjadi kesalahan',
+        description: error.response?.data?.message || 'Username atau password salah',
         status: 'error',
         duration: 3000
       })
@@ -51,6 +51,7 @@ function Login() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                required
               />
             </FormControl>
             <FormControl>
@@ -59,6 +60,7 @@ function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </FormControl>
             <Button type="submit" colorScheme="blue" width="100%">
